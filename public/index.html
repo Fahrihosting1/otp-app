@@ -1,47 +1,115 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kirim OTP</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kirim Email via URL</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 8px 12px;
+      margin: 8px 0 12px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    button:disabled {
+      background-color: #888;
+      cursor: wait;
+    }
+    #message {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+      min-height: 24px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Kirim OTP ke Email</h2>
-  <input type="email" id="email" placeholder="Masukkan email" />
-  <button onclick="kirimOtp()">Kirim OTP</button>
+  <h2>Kirim Email via URL (GET)</h2>
 
-  <h3>Verifikasi OTP</h3>
-  <input type="text" id="otp" placeholder="Masukkan OTP" />
-  <button onclick="verifikasiOtp()">Verifikasi</button>
+  <input type="email" id="to" placeholder="Tujuan email (to)" />
+  <input type="email" id="from_email" placeholder="Email pengirim (from_email)" />
+  <input type="password" id="from_pass" placeholder="App Password Gmail (from_pass)" />
+  <input type="text" id="subject" placeholder="Subject email" />
+  <textarea id="text" placeholder="Isi email" rows="5" style="width:100%; padding:8px; margin-bottom:12px;"></textarea>
+
+  <button id="sendBtn" onclick="kirimEmail()">Kirim Email</button>
 
   <p id="message"></p>
 
   <script>
-    function kirimOtp() {
-      const email = document.getElementById("email").value;
-      fetch("/api/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("message").textContent = data.message || data.error;
-      });
+    function setLoading(isLoading) {
+      const btn = document.getElementById('sendBtn');
+      if (isLoading) {
+        btn.disabled = true;
+        btn.textContent = 'Loading...';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Kirim Email';
+      }
     }
 
-    function verifikasiOtp() {
-      const email = document.getElementById("email").value;
-      const otp = document.getElementById("otp").value;
-      fetch("/api/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("message").textContent = data.message || data.error;
+    function kirimEmail() {
+      const to = document.getElementById('to').value.trim();
+      const from_email = document.getElementById('from_email').value.trim();
+      const from_pass = document.getElementById('from_pass').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const text = document.getElementById('text').value.trim();
+      const messageEl = document.getElementById('message');
+
+      if (!to || !from_email || !from_pass || !subject || !text) {
+        messageEl.textContent = 'Semua field wajib diisi';
+        return;
+      }
+
+      setLoading(true);
+      messageEl.textContent = '';
+
+      // Encode URL params supaya aman
+      const params = new URLSearchParams({
+        to, from_email, from_pass, subject, text
       });
+
+      fetch('/api/send-email?' + params.toString())
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            messageEl.style.color = 'green';
+            messageEl.textContent = data.message || 'Email berhasil dikirim';
+          } else {
+            messageEl.style.color = 'red';
+            messageEl.textContent = data.error || 'Gagal mengirim email';
+          }
+        })
+        .catch(() => {
+          messageEl.style.color = 'red';
+          messageEl.textContent = 'Terjadi kesalahan jaringan';
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
   </script>
 </body>
