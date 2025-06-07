@@ -13,34 +13,40 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); // serve HTML
 
 // Konfigurasi email Gmail (gunakan App Password, bukan password biasa)
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "fahrialiff51@gmail.com", // GANTI DENGAN EMAILMU
-    pass: "ekjx aazf skcu ieur"      // GANTI DENGAN APP PASSWORD (BUKAN PASSWORD EMAIL BIASA)
+app.post("/api/send-email", async (req, res) => {
+  const { to, from_email, from_pass, subject, text } = req.body;
+
+  // Validasi input
+  if (!to || !from_email || !from_pass || !subject || !text) {
+    return res.status(400).json({
+      success: false,
+      error: "Semua field (to, from_email, from_pass, subject, text) wajib diisi"
+    });
   }
-});
 
-// Kirim OTP
-app.post("/api/send-otp", async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ success: false, error: "Email kosong" });
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore[email] = otp;
+  // Buat transporter pakai data user
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: from_email,
+      pass: from_pass
+    }
+  });
 
   try {
     await transporter.sendMail({
-      from: `"OTP Service" <fahrialiff51@gmail.com>`,
-      to: email,
-      subject: "Kode OTP Anda",
-      text: `Kode OTP Anda adalah: ${otp}`
+      from: `"${from_email}" <${from_email}>`,
+      to,
+      subject,
+      text
     });
-    res.json({ success: true, message: "OTP dikirim" });
+
+    res.json({ success: true, message: "Email berhasil dikirim" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 // Verifikasi OTP
 app.post("/api/verify-otp", (req, res) => {
