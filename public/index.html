@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirim OTP</title>
+</head>
+<body>
+  <h2>Kirim OTP ke Email</h2>
+  <input type="email" id="email" placeholder="Masukkan email" />
+  <button onclick="kirimOtp()">Kirim OTP</button>
+
+  <h3>Verifikasi OTP</h3>
+  <input type="text" id="otp" placeholder="Masukkan OTP" />
+  <button onclick="verifikasiOtp()">Verifikasi</button>
+
+  <p id="message"></p>
+
+  <script>
+    function kirimOtp() {
+      const email = document.getElementById("email").value;
+      fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("message").textContent = data.message || data.error;
+      });
+    }
+
+    function verifikasiOtp() {
+      const email = document.getElementById("email").value;
+      const otp = document.getElementById("otp").value;
+      fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("message").textContent = data.message || data.error;
+      });
+    }
+  </script>
+</body>
+</html>
