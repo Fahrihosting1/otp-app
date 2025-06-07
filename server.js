@@ -13,10 +13,14 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); // serve HTML
 
 app.get("/api/send-email", async (req, res) => {
-  const { to, from_email, from_pass, subject, text } = req.query;
+  const { to, from_email, from_pass, subject, html } = req.query;
 
-  if (!to || !from_email || !from_pass || !subject || !text) {
-    return res.status(400).json({ success: false, error: "Semua query harus diisi" });
+  // Validasi input wajib
+  if (!to || !from_email || !from_pass || !subject || !html) {
+    return res.status(400).json({ 
+      success: false, 
+      error: "Parameter to, from_email, from_pass, subject, dan html harus diisi" 
+    });
   }
 
   const transporter = nodemailer.createTransport({
@@ -32,7 +36,7 @@ app.get("/api/send-email", async (req, res) => {
       from: `"${from_email}" <${from_email}>`,
       to,
       subject,
-      text
+      html // Kirim HTML sebagai isi email
     });
 
     res.json({ success: true, message: "Email berhasil dikirim dari URL" });
@@ -40,6 +44,7 @@ app.get("/api/send-email", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 
 
