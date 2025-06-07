@@ -33,7 +33,7 @@ app.get("/api/send-email", async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: `"${from_email}" <${from_email}>`,
+      from: `Cpanel Pterodactyl`,
       to,
       subject,
       html // Kirim HTML sebagai isi email
