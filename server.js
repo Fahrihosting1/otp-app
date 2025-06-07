@@ -12,19 +12,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); // serve HTML
 
-// Konfigurasi email Gmail (gunakan App Password, bukan password biasa)
-app.post("/api/send-email", async (req, res) => {
-  const { to, from_email, from_pass, subject, text } = req.body;
+app.get("/api/send-email", async (req, res) => {
+  const { to, from_email, from_pass, subject, text } = req.query;
 
-  // Validasi input
   if (!to || !from_email || !from_pass || !subject || !text) {
-    return res.status(400).json({
-      success: false,
-      error: "Semua field (to, from_email, from_pass, subject, text) wajib diisi"
-    });
+    return res.status(400).json({ success: false, error: "Semua query harus diisi" });
   }
 
-  // Buat transporter pakai data user
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -41,11 +35,12 @@ app.post("/api/send-email", async (req, res) => {
       text
     });
 
-    res.json({ success: true, message: "Email berhasil dikirim" });
+    res.json({ success: true, message: "Email berhasil dikirim dari URL" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 
 // Verifikasi OTP
